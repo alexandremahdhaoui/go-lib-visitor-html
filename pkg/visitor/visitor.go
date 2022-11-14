@@ -1,10 +1,3 @@
-// Package visitor
-// TODO:
-//   - use a Struct to properly Visit the tree:
-//     https://www.lihaoyi.com/post/ZeroOverheadTreeProcessingwiththeVisitorPattern.html
-//   - In the Visitor struct add `strategy` field to allow different Tree traversal algorithm.
-//     https://en.wikipedia.org/wiki/Tree_traversal
-//   - Maybe create a proper `go_lib_visitor_tree` package to handle Tree traversal.
 package visitor
 
 import (
@@ -12,31 +5,65 @@ import (
 	"golang.org/x/net/html"
 )
 
-type Visitor interface {
-	api.Visitor
-	VisitErrorNode(htmlNode) bool
-	VisitTextNode(htmlNode) bool
-	VisitDocumentNode(htmlNode) bool
-	VisitElementNode(htmlNode) bool
-	VisitCommentNode(htmlNode) bool
-	VisitDoctypeNode(htmlNode) bool
+type (
+	Func      func(node *Node) bool
+	Interface interface {
+		VisitCommentNode(*Node) bool
+		VisitDoctypeNode(*Node) bool
+		VisitDocumentNode(*Node) bool
+		VisitElementNode(*Node) bool
+		VisitErrorNode(*Node) bool
+		VisitTextNode(*Node) bool
+	}
+)
+
+func NewFunc() Func { return func(node *Node) bool { return false } }
+
+// New instantiate a new Visitor performing no actions when visiting a node.
+// Please use the Builder to
+func New() Visitor {
+	return Visitor{
+		visitCommentNode:  NewFunc(),
+		visitDoctypeNode:  NewFunc(),
+		visitDocumentNode: NewFunc(),
+		visitElementNode:  NewFunc(),
+		visitErrorNode:    NewFunc(),
+		visitTextNode:     NewFunc(),
+	}
 }
 
-func Visit(node htmlNode, visitor Visitor) bool {
+type Visitor struct {
+	visitCommentNode  Func
+	visitDoctypeNode  Func
+	visitDocumentNode Func
+	visitElementNode  Func
+	visitErrorNode    Func
+	visitTextNode     Func
+}
+
+func (v *Visitor) Visit(n api.Node) bool {
+	node := n.(*Node)
 	switch node.node.Type {
-	case html.ErrorNode:
-		return visitor.VisitErrorNode(node)
-	case html.TextNode:
-		return visitor.VisitTextNode(node)
-	case html.DocumentNode:
-		return visitor.VisitDocumentNode(node)
-	case html.ElementNode:
-		return visitor.VisitElementNode(node)
 	case html.CommentNode:
-		return visitor.VisitCommentNode(node)
+		return v.VisitCommentNode(node)
 	case html.DoctypeNode:
-		return visitor.VisitDoctypeNode(node)
+		return v.VisitDoctypeNode(node)
+	case html.DocumentNode:
+		return v.VisitDocumentNode(node)
+	case html.ElementNode:
+		return v.VisitElementNode(node)
+	case html.ErrorNode:
+		return v.VisitErrorNode(node)
+	case html.TextNode:
+		return v.VisitTextNode(node)
 	default:
 		panic("not implemented")
 	}
 }
+
+func (v *Visitor) VisitCommentNode(node *Node) bool  { return v.visitCommentNode(node) }
+func (v *Visitor) VisitDoctypeNode(node *Node) bool  { return v.visitDoctypeNode(node) }
+func (v *Visitor) VisitDocumentNode(node *Node) bool { return v.visitDocumentNode(node) }
+func (v *Visitor) VisitElementNode(node *Node) bool  { return v.visitElementNode(node) }
+func (v *Visitor) VisitErrorNode(node *Node) bool    { return v.visitErrorNode(node) }
+func (v *Visitor) VisitTextNode(node *Node) bool     { return v.visitTextNode(node) }
