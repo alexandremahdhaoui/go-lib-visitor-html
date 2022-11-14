@@ -1,17 +1,3 @@
-[[_TOC_]]
-
-# Repository structure
-
-| Path                     | Description                                     |
-|--------------------------|-------------------------------------------------|
-| `pkg/visitor/builder.go` | contains the `Visitor`'s `Builder` struct       |
-| `pkg/visitor/node.go`    | contains `Node` & `Edge` structs                |
-| `pkg/visitor/visitor.go` | contains `Visitor` Interface & `Visit` function |
-
-
-# Usage
-
-```golang
 package main
 
 import (
@@ -27,41 +13,50 @@ import (
 func displayTextNodeData(node *visitor.Node) bool { println(node.Data()); return false }
 
 func main() {
-    doc := getHtmlDoc()
-	
+	doc := getHtmlDoc()
+
 	// initialize the node
 	node := visitor.NewNode(doc)
-	
+
 	// build the visitor
 	builder := visitor.NewBuilder()
 	v := builder.SetVisitTextNode(displayTextNodeData).Build()
-	
+
 	// Visit the root node
 	v.Visit(&node)
-	
+
 	// Visit node's graph with depth-first search algorithm:
 	graph.DFS(&node, &v)
-	
+
 	// Visit node's graph with breadth-first search algorithm:
 	graph.DFS(&node, &v)
 }
 
 func getHtmlDoc() *html.Node {
 	file, err := os.Open("example/markdown_to_html_visitor/raw_markdown.md")
-	if err != nil {panic(err)}
-	
+	if err != nil {
+		panic(err)
+	}
+
 	b, err := io.ReadAll(file)
-	if err != nil {panic(err)}
-	
+	if err != nil {
+		panic(err)
+	}
+
 	var buf bytes.Buffer
-	if err := goldmark.Convert(b, &buf); err != nil {panic(err)}
-	
+	if err := goldmark.Convert(b, &buf); err != nil {
+		panic(err)
+	}
+
 	b, err = io.ReadAll(&buf)
-	if err != nil {panic(err)}
-	
+	if err != nil {
+		panic(err)
+	}
+
 	doc, err := html.Parse(bytes.NewReader(b))
-	if err != nil {panic(err)}
-	
+	if err != nil {
+		panic(err)
+	}
+
 	return doc
 }
-```
