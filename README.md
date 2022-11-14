@@ -1,4 +1,4 @@
-# go-lib-html-visitor
+# go-lib-visitor-html
 
 ## Usage
 
